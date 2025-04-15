@@ -7,7 +7,6 @@ export class User extends Model {
   public name!: string;
   public email!: string;
   public password!: string;
-  public phone_number!: string;
   public cpf!: string; 
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
@@ -46,18 +45,18 @@ User.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    phone_number: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
     cpf: { 
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(11), 
       allowNull: false, 
+      unique: true, 
+      validate: {
+        is: /^[0-9]{11}$/i,  // Validação do CPF (apenas números e 11 dígitos)
+      },
     },
   },
   {
     sequelize,
-    tableName: 'da_users',
+    tableName: 'users',
     timestamps: true,
     paranoid: true,
   }

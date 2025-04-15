@@ -44,7 +44,7 @@ export const refreshToken = async (req: Request, res: Response) => {};
 
 export const registerUser   = async (req: Request, res: Response) => {
     try {
-      const { name, email, phone_number, cpf, password } = req.body;
+      const { name, email, cpf, password } = req.body;
   
       const existing_cpf = await User.findOne({ where: { cpf } });
       if (existing_cpf) return res.status(400).json({ message: 'Este CPF já está registrado.' });
@@ -52,16 +52,12 @@ export const registerUser   = async (req: Request, res: Response) => {
       const existing_email = await User.findOne({ where: { email } });
       if (existing_email) return res.status(400).json({ message: 'Este e-mail já está registrado.' });
   
-      const existing_phone_number = await User.findOne({ where: { phone_number } });
-      if (existing_phone_number) return res.status(400).json({ message: 'Este número já está registrado.' });
-  
       const password_hash = await bcrypt.hash(password, 10);
   
       await User.create({
         name,
         email,
         password_hash,
-        phone_number,
         cpf,
       });
   
