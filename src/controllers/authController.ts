@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 import { generateToken } from '../services/authService';
-import { User } from 'models/User';
+import { User } from '../models/User';
 
 export const login = async (req: Request, res: Response) => {
     try {
