@@ -4,6 +4,8 @@ import { Op } from 'sequelize';
 import { generateToken } from '../services/authService';
 import { User } from '../models/User';
 import { validateCpf  } from '../services/cpfService'; 
+import axios from 'axios';
+import jwt from 'jsonwebtoken';
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -40,6 +42,29 @@ export const login = async (req: Request, res: Response) => {
 };
 
 export const logout = async (req: Request, res: Response) => {};
+;
+
+export const proxyDashboard = async (req: Request, res: Response) => {
+    try {
+        // Pegando o token da query string
+        const token = req.query.token as string;
+        if (!token) return res.status(401).json({ message: 'Token não fornecido.' });
+
+        // Verificando o token
+        jwt.verify(token, process.env.JWT_SECRET || 'secret', (err, decoded) => {
+            if (err) {
+                return res.status(403).json({ message: 'Token inválido ou expirado.' });
+            }
+
+            // Se o token for válido, continue com a lógica
+            console.log('Token decodificado:', decoded);
+            // Aqui você pode continuar com a lógica de redirecionamento ou outros passos
+        });
+    } catch (err) {
+        console.error('Erro ao fazer proxy do dashboard:', err);
+        res.status(500).send('Erro ao carregar o dashboard');
+    }
+};
 
 export const refreshToken = async (req: Request, res: Response) => {};
 
