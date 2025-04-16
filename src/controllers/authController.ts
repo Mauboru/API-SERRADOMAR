@@ -3,6 +3,7 @@ import bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
 import { generateToken } from '../services/authService';
 import { User } from '../models/User';
+import { validateCpf  } from '../services/cpfService'; 
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -42,29 +43,46 @@ export const logout = async (req: Request, res: Response) => {};
 
 export const refreshToken = async (req: Request, res: Response) => {};
 
-export const registerUser   = async (req: Request, res: Response) => {
+export const registerUser = async (req: Request, res: Response) => {
     try {
-      const { name, email, cpf, password } = req.body;
-  
-      const existing_cpf = await User.findOne({ where: { cpf } });
-      if (existing_cpf) return res.status(400).json({ message: 'Este CPF já está registrado.' });
-  
-      const existing_email = await User.findOne({ where: { email } });
-      if (existing_email) return res.status(400).json({ message: 'Este e-mail já está registrado.' });
-  
-      const password_hash = await bcrypt.hash(password, 10);
-  
-      await User.create({
+        const { name, email, cpf, password } = req.body;
+
+        const existing_email = await User.findOne({ where: { email } });
+        if (existing_email) {
+            return res.status(400).json({
+                errors: {
+                    email: 'Este e-mail já está registrado.',
+                },
+            });
+        }
+
+        const cpfValido = await validateCpf (cpf);
+        if (!cpfValido) {
+            return res.status(400).json({
+                errors: { cpf: 'CPF inválido ou não encontrado na Receita Federal.' },
+            });
+        }
+
+        const existing_cpf = await User.findOne({ where: { cpf } });
+        if (existing_cpf) {
+            return res.status(400).json({
+                errors: { cpf: 'Este CPF já está registrado.' },
+            });
+        }
+
+        const password_hash = await bcrypt.hash(password, 10);
+
+        await User.create({
         name,
         email,
         password: password_hash,
         cpf,
-      });
-  
-      return res.status(201).json({ message: 'Usuário criado com sucesso.' });
+    });
+
+    return res.status(201).json({ message: 'Usuário criado com sucesso.' });
     } catch (error) {
-      console.error('Erro ao registrar usuário:', error);
-      return res.status(500).json({ message: 'Erro interno do servidor.' });
+        console.error('Erro ao registrar usuário:', error);
+        return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
 
