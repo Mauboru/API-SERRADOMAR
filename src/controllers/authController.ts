@@ -1,21 +1,21 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import { Op } from 'sequelize';
-import { generateToken } from '../services/authService';
 import { User } from '../models/User';
-import { validateCpf  } from '../services/cpfService'; 
-import axios from 'axios';
 import jwt from 'jsonwebtoken';
+import { generateToken } from '../services/authService';
+import { validateCpf } from '../services/cpfService';
+import { sendNewUserNotification } from '../services/mailService';
 
 export const login = async (req: Request, res: Response) => {
     try {
         const { cpf_or_email, password } = req.body;
 
-        const user = await User.findOne({ 
-        where: { 
-            [Op.or]: [{ cpf: cpf_or_email }, { email: cpf_or_email }],
-            deletedAt: null
-        }
+        const user = await User.findOne({
+            where: {
+                [Op.or]: [{ cpf: cpf_or_email }, { email: cpf_or_email }],
+                deletedAt: null
+            }
         });
 
         if (!user) {
@@ -27,6 +27,10 @@ export const login = async (req: Request, res: Response) => {
             return res.status(401).json({ message: 'Credenciais inválidas.' });
         }
 
+        if (user.status !== 'active') {
+            return res.status(401).json({ message: 'Seu pedido de acesso esta em avaliação!.' });
+        }
+
         const token = generateToken({ id: user.id, email: user.email });
 
         return res.status(200).json({
@@ -34,15 +38,12 @@ export const login = async (req: Request, res: Response) => {
             token,
             user: { id: user.id, name: user.name, email: user.email }
         });
-        
+
     } catch (error) {
         console.error('Erro ao fazer login:', error);
         return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
-
-export const logout = async (req: Request, res: Response) => {};
-;
 
 export const proxyDashboard = async (req: Request, res: Response) => {
     try {
@@ -66,8 +67,6 @@ export const proxyDashboard = async (req: Request, res: Response) => {
     }
 };
 
-export const refreshToken = async (req: Request, res: Response) => {};
-
 export const registerUser = async (req: Request, res: Response) => {
     try {
         const { name, email, cpf, password } = req.body;
@@ -81,7 +80,7 @@ export const registerUser = async (req: Request, res: Response) => {
             });
         }
 
-        const cpfValido = await validateCpf (cpf);
+        const cpfValido = await validateCpf(cpf);
         if (!cpfValido) {
             return res.status(400).json({
                 errors: { cpf: 'CPF inválido ou não encontrado na Receita Federal.' },
@@ -96,21 +95,25 @@ export const registerUser = async (req: Request, res: Response) => {
         }
 
         const password_hash = await bcrypt.hash(password, 10);
+        const name_uppercase = name.toUpperCase();
 
         await User.create({
-        name,
-        email,
-        password: password_hash,
-        cpf,
-    });
+            name: name_uppercase,
+            email,
+            password: password_hash,
+            cpf,
+        });
 
-    return res.status(201).json({ message: 'Usuário criado com sucesso.' });
+        const managers = await User.findAll({ where: { role: 'manager' } });
+        for (const manager of managers) {
+            await sendNewUserNotification(manager.email, name, email);
+        }
+
+        return res.status(201).json({ message: 'Usuário criado com sucesso.' });
     } catch (error) {
         console.error('Erro ao registrar usuário:', error);
         return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
 
-export const forgotPassword = async (req: Request, res: Response) => {};
-
-export const resetPassword = async (req: Request, res: Response) => {};
+export const resetPassword = async (req: Request, res: Response) => { };

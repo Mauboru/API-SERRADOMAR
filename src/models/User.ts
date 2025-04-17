@@ -7,7 +7,9 @@ export class User extends Model {
   public name!: string;
   public email!: string;
   public password!: string;
-  public cpf!: string; 
+  public cpf!: string;
+  public role!: 'guest' | 'user' | 'manager';
+  public status!: 'pending' | 'active' | 'inactive';
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
   public readonly deletedAt!: Date | null;
@@ -24,17 +26,17 @@ export class User extends Model {
 User.init(
   {
     id: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.INTEGER.UNSIGNED,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false,
     },
     name: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     email: {
-      type: DataTypes.STRING,
+      type: DataTypes.STRING(100),
       allowNull: false,
       unique: true,
       validate: {
@@ -42,22 +44,32 @@ User.init(
       },
     },
     password: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false,
     },
-    cpf: { 
-      type: DataTypes.STRING(11), 
-      allowNull: false, 
-      unique: true, 
+    cpf: {
+      type: DataTypes.STRING(11),
+      allowNull: false,
+      unique: true,
       validate: {
-        is: /^[0-9]{11}$/i,  // Validação do CPF (apenas números e 11 dígitos)
+        is: /^[0-9]{11}$/i,
       },
+    },
+    role: {
+      type: DataTypes.ENUM('guest', 'user', 'manager'),
+      allowNull: false,
+      defaultValue: 'user',
+    },
+    status: {
+      type: DataTypes.ENUM('pending', 'active', 'inactive'),
+      allowNull: false,
+      defaultValue: 'pending',
     },
   },
   {
     sequelize,
     tableName: 'users',
     timestamps: true,
-    paranoid: true,
+    paranoid: true, // Isso ativa o deletedAt
   }
 );
