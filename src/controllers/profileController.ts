@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { User } from 'models/User';
+import { User } from '../models/User';
 import { sendNewUserNotificationActive, sendNewUserNotificationInactive } from '../services/mailService';
 
 export const getUsers = async (req: Request, res: Response) => {
