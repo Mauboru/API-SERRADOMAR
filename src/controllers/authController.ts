@@ -18,25 +18,20 @@ export const login = async (req: Request, res: Response) => {
             }
         });
 
-        if (!user) {
-            return res.status(401).json({ message: 'Credenciais inválidas ou usuário desativado.' });
-        }
+        if (!user) return res.status(401).json({ message: 'Credenciais inválidas ou usuário desativado.' });
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            return res.status(401).json({ message: 'Credenciais inválidas.' });
-        }
+        if (!isPasswordValid) return res.status(401).json({ message: 'Credenciais inválidas.' });
 
-        if (user.status !== 'active') {
-            return res.status(401).json({ message: 'Seu pedido de acesso esta em avaliação!.' });
-        }
+        if (user.status === 'pending') return res.status(401).json({ message: 'Seu pedido de acesso esta em avaliação!.' });
+        if (user.status === 'inactive') return res.status(401).json({ message: 'Seu pedido de acesso foi recusado!.' });
 
         const token = generateToken({ id: user.id, email: user.email });
 
         return res.status(200).json({
             message: 'Login bem-sucedido.',
             token,
-            user: { id: user.id, name: user.name, email: user.email }
+            user: { id: user.id, name: user.name, email: user.email, role: user.role }
         });
 
     } catch (error) {

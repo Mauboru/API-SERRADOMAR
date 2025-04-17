@@ -1,8 +1,10 @@
 import { Router } from 'express';
-import { getUsersPending   } from '../controllers/profileController';
+import { getUsers, setUserActive, setUserInactive } from '../controllers/profileController';
 
 const router = Router();
 
-router.get("/getUsersPending", getUsersPending);
+router.get("/getUsers", getUsers);
+router.post("/setUserActive/:id", setUserActive);
+router.post("/setUserInactive/:id", setUserInactive);
 
 export default router;
