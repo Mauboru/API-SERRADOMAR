@@ -142,3 +142,46 @@ export const sendNewUserNotificationInactive = async (toEmail: string, newUserNa
 
     await transporter.sendMail(mailOptions);
 };
+
+export const sendResetPasswordNotification = async (toEmail: string) => {
+    const transporter = nodemailer.createTransport({
+        host: process.env.SMTP_HOST,
+        port: Number(process.env.SMTP_PORT),
+        secure: false,
+        auth: {
+            user: process.env.SMTP_USER,
+            pass: process.env.SMTP_PASS,
+        },
+    });
+
+    const mailOptions = {
+        from: '"Grandes Mamiferos Serra do Mar" <no-reply@serradomar.com>',
+        to: toEmail,
+        subject: 'Seu link para criar uma nova senha!!',
+        html: `
+            <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 40px;">
+                <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow: hidden;">
+                    <div style="background-color:rgb(132, 28, 184); padding: 20px; color: white; text-align: center;">
+                        <div style="padding: 20px; text-align: center;">
+                            <img src="http://212.85.19.3:3002/logomarca.png" alt="Sistema Serradomar" style="max-width: 180px; height: auto;" />
+                        </div>
+                    </div>
+                    <div style="padding: 30px; color: #333;">
+                    <p style="font-size: 16px;">Olá,</p>
+                    <p style="font-size: 16px;">
+                        Acesse seu link para fazer sua nova senha! Este link irá expirar em 24 horas, LINK 
+                    </p>
+                    <p style="font-size: 14px; color: #666;">
+                        Você está recebendo este e-mail porque é um convidado do sistema.
+                    </p>
+                    </div>
+                    <div style="background-color: #f0f0f0; padding: 20px; text-align: center; font-size: 12px; color: #999;">
+                    © ${new Date().getFullYear()} Grandes Mamiferos Serra do Mar
+                    </div>
+                </div>
+            </div>
+        `,
+    };
+
+    await transporter.sendMail(mailOptions);
+};

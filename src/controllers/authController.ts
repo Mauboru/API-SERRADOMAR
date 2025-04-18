@@ -5,7 +5,7 @@ import { User } from '../models/User';
 import jwt from 'jsonwebtoken';
 import { generateToken } from '../services/authService';
 import { validateCpf } from '../services/cpfService';
-import { sendNewUserNotification } from '../services/mailService';
+import { sendNewUserNotification, sendResetPasswordNotification } from '../services/mailService';
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -107,6 +107,23 @@ export const registerUser = async (req: Request, res: Response) => {
         return res.status(201).json({ message: 'Usuário criado com sucesso.' });
     } catch (error) {
         console.error('Erro ao registrar usuário:', error);
+        return res.status(500).json({ message: 'Erro interno do servidor.' });
+    }
+};
+
+export const sendEmailReset = async (req: Request, res: Response) => {
+    try {
+        const { email } = req.body;
+        const is_real_email = await User.findOne({ where: { email } });
+        if (is_real_email) {
+            await sendResetPasswordNotification(email);
+            return res.status(201).json({ message: 'Email enviado com sucesso! Verifique sua caixa de mensagem' });
+        } else {
+            return res.status(404).json({ message: 'Email não encontrado.' });
+        }
+
+    } catch (error) {
+        console.error('Erro ao enviar email:', error);
         return res.status(500).json({ message: 'Erro interno do servidor.' });
     }
 };
